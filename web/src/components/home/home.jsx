@@ -1,0 +1,144 @@
+import axios, { all } from "axios";
+import { useEffect, useRef, useState } from "react";
+import "./home.css";
+// import WeatherCard from "../weatherWidget/weatherWidget";
+const baseUrl = "http://localhost:5001";
+
+const Home = () => {
+  const [alert, setAlert] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const postTitleInputRef = useRef(null);
+  const postBodyInputRef = useRef(null);
+  const [allPosts, setAllPosts] = useState([])
+
+  const getAllPosts = async () => {
+
+      try {
+        setIsLoading(true)
+          // let apiKey = "1eb2b0718446fe54a6718bc2ed5f4a03"
+          const response = await axios.get(`${baseUrl}/api/v1/mongoDB/posts`);
+
+        console.log(response.data);
+        // setWeatherData([response.data, ...weatherData]);
+        setIsLoading(false)
+        setAllPosts([...response.data])
+      } catch (error) {
+        console.log(error);
+        setIsLoading(false)
+      }
+    }
+  
+
+  useEffect(() => {
+    // setIsLoading(true)
+    // const controller = new AbortController();
+    // if (navigator.geolocation) {
+    //   navigator.geolocation.getCurrentPosition(async(location) => {
+    //     console.log("location", location)
+    getAllPosts()
+
+    return () => {
+      //cleanup function
+      // controller.abort()
+    }
+
+  }, []);
+
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    // not recommended below method for get input value
+    // let cityName = document.querySelector('#cityName').value
+    // console.log("cityName: ", cityNameRef.current.value);
+    try {
+        setIsLoading(true)
+        const response = await axios.post(`${baseUrl}/api/v1/mongoDB/post`,{
+          title: postTitleInputRef.current.value,
+          text: postBodyInputRef.current.value,
+        });
+
+      // console.log(response.data);
+      // setWeatherData([response.data, ...weatherData]);
+      setIsLoading(false)
+      console.log(response.data);
+      setAlert(response.data.message)
+
+    } catch (error) {
+      console.log(error.data);
+      setIsLoading(false)
+    }
+  };
+
+  const delPostHandler = async (e) => {
+    try {
+      setIsLoading(true)
+      const response = await axios.delete(`${baseUrl}/api/v1/mongoDB/post`,{
+        title: postTitleInputRef.current.value,
+        text: postBodyInputRef.current.value,
+      });
+
+    // console.log(response.data);
+    // setWeatherData([response.data, ...weatherData]);
+    setIsLoading(false)
+    console.log(response.data);
+    setAlert(response.data.message)
+
+  } catch (error) {
+    console.log(error.data);
+    setIsLoading(false)
+  }
+  }
+
+  return (
+    <div>
+      <form onSubmit={submitHandler}>
+        <label htmlFor="postTitleInput">Post Title: </label>
+        <input
+          type="text"
+          name=""
+          id="postTitleInput"
+          required
+          minLength={2}
+          maxLength={20}
+          ref={postTitleInputRef}
+        ></input>
+        <br />
+        <label htmlFor="postBodyInput">Post Body: </label>
+        <textarea 
+        name="" 
+        id="postBodyInput" 
+        required
+        minLength={2}
+        maxLength={999}
+        ref={postBodyInputRef}>
+        </textarea>
+        {/* <textarea
+          name=""
+          id="postBodyInput"
+          required
+          minLength={2}
+          maxLength={20}
+          ref={postBodyInputRef}
+        ></textarea> */}
+        <br />
+        <button type="submit">Publish Post</button>
+      </form>
+      <hr />
+      {alert && <p>{alert}</p>}
+      {isLoading && <p>Loading...</p>}
+      <br />
+      <div>
+        {allPosts.map((post) => {
+          return(
+           <div key={post._id} className="post">
+            <h2>{post.title}</h2>
+            <p>{post.text}</p>
+            <button>Edit</button>
+            <button onClick={delPostHandler}>Delete</button>
+           </div>) 
+        })}
+      </div>
+    </div>
+  );
+};
+
+export default Home;
