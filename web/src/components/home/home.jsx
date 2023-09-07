@@ -10,6 +10,7 @@ const Home = () => {
   const postTitleInputRef = useRef(null);
   const postBodyInputRef = useRef(null);
   const [allPosts, setAllPosts] = useState([])
+  const [toggleRefresh, setToggleRefresh] = useState(false)
 
   const getAllPosts = async () => {
 
@@ -27,7 +28,6 @@ const Home = () => {
         setIsLoading(false)
       }
     }
-  
 
   useEffect(() => {
     // setIsLoading(true)
@@ -42,7 +42,7 @@ const Home = () => {
       // controller.abort()
     }
 
-  }, []);
+  }, [toggleRefresh]);
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -61,6 +61,9 @@ const Home = () => {
       setIsLoading(false)
       console.log(response.data);
       setAlert(response.data.message)
+      setToggleRefresh(!toggleRefresh)
+      postTitleInputRef.current.value = "";
+      postBodyInputRef.current.value = "";
 
     } catch (error) {
       console.log(error.data);
@@ -68,10 +71,10 @@ const Home = () => {
     }
   };
 
-  const delPostHandler = async (e) => {
+  const delPostHandler = async (_id) => {
     try {
       setIsLoading(true)
-      const response = await axios.delete(`${baseUrl}/api/v1/mongoDB/post`,{
+      const response = await axios.delete(`${baseUrl}/api/v1/mongoDB/post/${_id}`,{
         title: postTitleInputRef.current.value,
         text: postBodyInputRef.current.value,
       });
@@ -81,6 +84,7 @@ const Home = () => {
     setIsLoading(false)
     console.log(response.data);
     setAlert(response.data.message)
+    setToggleRefresh(!toggleRefresh)
 
   } catch (error) {
     console.log(error.data);
@@ -108,7 +112,7 @@ const Home = () => {
         id="postBodyInput" 
         required
         minLength={2}
-        maxLength={999}
+        maxLength={9999}
         ref={postBodyInputRef}>
         </textarea>
         {/* <textarea
@@ -123,8 +127,10 @@ const Home = () => {
         <button type="submit">Publish Post</button>
       </form>
       <hr />
-      {alert && <p>{alert}</p>}
-      {isLoading && <p>Loading...</p>}
+      <p>
+      {alert && alert}
+      {isLoading && "Loading..."}
+      </p>
       <br />
       <div>
         {allPosts.map((post) => {
@@ -133,7 +139,7 @@ const Home = () => {
             <h2>{post.title}</h2>
             <p>{post.text}</p>
             <button>Edit</button>
-            <button onClick={delPostHandler}>Delete</button>
+            <button onClick={()=>{delPostHandler(post._id)}}>Delete</button>
            </div>) 
         })}
       </div>

@@ -146,7 +146,7 @@ router.put('/post/:postId', async (req, res, next) => {
             //   $currentDate: { lastModified: true }
             }
           );
-          res.send('Data has been updated.');
+          res.send({message: 'Data has been updated.'});
         
     } catch (error) {
         console.log(error);
@@ -172,14 +172,14 @@ router.put('/post/:postId', async (req, res, next) => {
 router.delete('/post/:postId', async (req, res, next) => {
 
     if (!req.params.postId) {
-        res.status(403).send(`post id must be a valid id`)
+        res.status(403).send({message: `post id must be a valid id`})
     }
     try{
     await col.deleteOne({ _id: new ObjectId(req.params.postId) });
-    res.send('Data has been deleted.')
+    res.send({message: 'Data has been deleted.'})
     }catch (err){
 
-    res.status(404).send('Error deleting.')
+    res.status(404).send({message: 'Error deleting.'})
     
     }
 
