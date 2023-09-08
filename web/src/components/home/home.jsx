@@ -1,4 +1,4 @@
-import axios, { all } from "axios";
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import "./home.css";
 // import WeatherCard from "../weatherWidget/weatherWidget";
@@ -6,6 +6,7 @@ const baseUrl = "http://localhost:5001";
 
 const Home = () => {
   const [alert, setAlert] = useState([]);
+  const [editAlert, setEditAlert] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const postTitleInputRef = useRef(null);
   const postBodyInputRef = useRef(null);
@@ -92,6 +93,33 @@ const Home = () => {
   }
   }
 
+  const editSaveSubmitHandler = async (e) => {
+    e.preventDefault()
+
+    const _id = e.target[0].value
+    const title = e.target[1].value
+    const text = e.target[2].value
+
+    try {
+      setIsLoading(true)
+      const response = await axios.put(`${baseUrl}/api/v1/mongoDB/post/${_id}`,{
+        title: title,
+        text: text,
+      });
+
+    // console.log(response.data);
+    // setWeatherData([response.data, ...weatherData]);
+    setIsLoading(false)
+    console.log(response.data);
+    setAlert(response.data.message)
+    setToggleRefresh(!toggleRefresh)
+
+  } catch (error) {
+    console.log(error.data);
+    setIsLoading(false)
+  }
+  }
+
   return (
     <div>
       <form onSubmit={submitHandler}>
@@ -125,22 +153,49 @@ const Home = () => {
         ></textarea> */}
         <br />
         <button type="submit">Publish Post</button>
+        <span>
+          {alert && alert}
+          {isLoading && "Loading..."}
+      </span>
+      <br />
       </form>
       <hr />
-      <p>
-      {alert && alert}
-      {isLoading && "Loading..."}
-      </p>
-      <br />
+
       <div>
-        {allPosts.map((post) => {
+        {allPosts.map((post , index) => {
           return(
            <div key={post._id} className="post">
+
+            {post.isEdit ?
+            (<form onSubmit={editSaveSubmitHandler}>
+              <input type="text" disabled defaultValue={post._id} hidden />
+              <br />
+              <input defaultValue={post.title} type="text" placeholder="title"/>
+              <br />
+              <textarea defaultValue={post.text} placeholder="write something.."></textarea>
+              <br />
+              <button type="submit">Save</button>
+              <button type="button" onClick={()=>{
+                post.isEdit = false
+                setAllPosts([...allPosts])
+              }}>
+                Cancel</button>
+              <span>
+                {editAlert && editAlert}
+                {isLoading && "Loading..."}
+              </span>
+          </form>) : (<div>
             <h2>{post.title}</h2>
             <p>{post.text}</p>
-            <button>Edit</button>
+            <button onClick={()=>{
+              allPosts[index].isEdit = true
+              setAllPosts([...allPosts])
+            }}>Edit</button>
             <button onClick={()=>{delPostHandler(post._id)}}>Delete</button>
-           </div>) 
+            </div>)}
+
+           </div>)
+           
         })}
       </div>
     </div>
